@@ -22,6 +22,8 @@ include_directories(
 add_executable(gstreamer_pipeline
     src/main.cpp
     src/gstreamer_pipeline.cpp
+    src/FrameProcessor.cpp
+    src/FrameSaver.cpp
 )
 
 # === Bibliotheken verlinken ===
