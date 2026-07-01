@@ -9,7 +9,7 @@ void FrameProcessor::setMode(ProcessingMode mode) {
 
 cv::Mat FrameProcessor::process(const cv::Mat& input) {
     if (input.empty()) {
-        return cv::Mat();
+        return cv::Mat{};
     }
 
     switch (m_mode) {

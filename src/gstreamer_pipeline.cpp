@@ -44,7 +44,7 @@ static void on_pad_added(GstElement *element, GstPad *pad, gpointer data) {
 
     GstPadLinkReturn ret = gst_pad_link(pad, sinkpad);
     if (ret != GST_PAD_LINK_OK) {
-        std::cerr << "Failed to link decodebin pad!" << std::endl;
+        std::cerr << "Failed to link decodebin pad!" << '\n';
     }
 
     gst_object_unref(sinkpad);
@@ -54,7 +54,7 @@ static void on_pad_added(GstElement *element, GstPad *pad, gpointer data) {
  * @brief Initialize GStreamer and create a basic pipeline.
  */
 bool GStreamerPipeline::init() {
-    std::cout << "Initializing GStreamer pipeline..." << std::endl;
+    std::cout << "Initializing GStreamer pipeline..." << '\n';
 
     gst_init(nullptr, nullptr);
 
@@ -67,7 +67,7 @@ bool GStreamerPipeline::init() {
     data.sink        = gst_element_factory_make("appsink", "sink");
 
     if (!data.pipeline || !data.source || !data.decodebin || !data.convert || !data.sink) {
-        std::cerr << "Failed to create GStreamer elements!" << std::endl;
+        std::cerr << "Failed to create GStreamer elements!" << '\n';
         return false;
     }
 
@@ -75,7 +75,7 @@ bool GStreamerPipeline::init() {
     auto videoPath = resolveVideoPath(projectRoot);
 
     if (!std::filesystem::exists(videoPath)) {
-        std::cerr << "Video file not found at: " << videoPath << std::endl;
+        std::cerr << "Video file not found at: " << videoPath << '\n';
         return false;
     }
 
@@ -105,12 +105,12 @@ bool GStreamerPipeline::init() {
 
     // Link source to decodebin
     if (!gst_element_link(data.source, data.decodebin)) {
-        std::cerr << "Failed to link source to decodebin!" << std::endl;
+        std::cerr << "Failed to link source to decodebin!" << '\n';
         return false;
     }
 
     if (!gst_element_link(data.convert, data.sink)) {
-        std::cerr << "Failed to link convert to sink!" << std::endl;
+        std::cerr << "Failed to link convert to sink!" << '\n';
         return false;
     }
 
@@ -121,10 +121,10 @@ bool GStreamerPipeline::init() {
     auto outputDir = projectRoot / "output" / "frames";
     std::filesystem::create_directories(outputDir);
     frameSaver.setBaseFolder(outputDir);
-    std::cout << "Using project root: " << projectRoot << std::endl;
-    std::cout << "Using video file: " << videoPath << std::endl;
+    std::cout << "Using project root: " << projectRoot << '\n';
+    std::cout << "Using video file: " << videoPath << '\n';
 
-    std::cout << "GStreamer pipeline created successfully." << std::endl;
+    std::cout << "GStreamer pipeline created successfully." << '\n';
     return true;
 }
 
@@ -132,18 +132,18 @@ bool GStreamerPipeline::init() {
  * @brief Run the GStreamer pipeline.
  */
 void GStreamerPipeline::run() {
-    std::cout << "Starting pipeline..." << std::endl;
+    std::cout << "Starting pipeline..." << '\n';
 
     GstBus *bus = gst_element_get_bus(data.pipeline);
 
     GstStateChangeReturn ret = gst_element_set_state(data.pipeline, GST_STATE_PLAYING);
     if (ret == GST_STATE_CHANGE_FAILURE) {
-        std::cerr << "Failed to start pipeline!" << std::endl;
+        std::cerr << "Failed to start pipeline!" << '\n';
         gst_object_unref(bus);
         return;
     }
 
-    std::cout << "Pipeline is running. Processing frames..." << std::endl;
+    std::cout << "Pipeline is running. Processing frames..." << '\n';
 
     int frame_count = 0;
     bool first_frame = true;
@@ -165,13 +165,14 @@ void GStreamerPipeline::run() {
             const gchar *format = gst_structure_get_string(structure, "format");
 
             // Get image info from caps
-            gint width, height;                
+            gint width  = 0;
+            gint height = 0;
             gst_structure_get_int(structure, "width", &width);
             gst_structure_get_int(structure, "height", &height);
 
             if (first_frame) {
                 std::cout << "Video info - Format: " << (format ? format : "unknown") 
-                          << ", Size: " << width << "x" << height << std::endl;
+                          << ", Size: " << width << "x" << height << '\n';
                 first_frame = false;
             }
             // Only process if format is BGR
@@ -193,21 +194,21 @@ void GStreamerPipeline::run() {
                     gst_buffer_unmap(buffer, &map);
                 }
             } else {
-                std::cout << "Skipping unsupported format: " << (format ? format : "unknown") << std::endl;
+                std::cout << "Skipping unsupported format: " << (format ? format : "unknown") << '\n';
             }
         }
 
         gst_sample_unref(sample);
     }
 
-    std::cout << "Finished processing " << frame_count << " frames." << std::endl;
+    std::cout << "Finished processing " << frame_count << " frames." << '\n';
 }
 
 /**
  * @brief Clean up GStreamer resources.
  */
 void GStreamerPipeline::cleanup() {
-    std::cout << "Cleaning up..." << std::endl;
+    std::cout << "Cleaning up..." << '\n';
 
     if (data.pipeline) {
         gst_element_set_state(data.pipeline, GST_STATE_NULL);

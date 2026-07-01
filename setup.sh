@@ -6,6 +6,12 @@ echo "=== Setup for GStreamer + OpenCV project ==="
 echo "System update..."
 sudo apt update && sudo apt upgrade -y
 
+# === Development Tools ===
+echo "Installing development tools..."
+sudo apt install -y \
+    clang-tidy \
+    clang-format
+
 # GStreamer installieren
 echo "Installing GStreamer..."
 sudo apt install -y \

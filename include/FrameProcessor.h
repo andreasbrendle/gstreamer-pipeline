@@ -1,11 +1,12 @@
 #pragma once
 
+#include <cstdint>
 #include <opencv2/opencv.hpp>
 
 /**
  * @brief Available processing modes for image frames.
  */
-enum class ProcessingMode {
+enum class ProcessingMode : std::uint8_t {
     Grayscale,
     // Add more modes later, e.g.:
     // CLAHE,

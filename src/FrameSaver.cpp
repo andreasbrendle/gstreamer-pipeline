@@ -21,9 +21,9 @@ void FrameSaver::save(const cv::Mat& frame, const std::string& suffix, int frame
     std::filesystem::path filename = buildFilename(frameNumber, suffix);
 
     if (cv::imwrite(filename.string(), frame)) {
-        std::cout << "Saved: " << filename << std::endl;
+        std::cout << "Saved: " << filename << '\n';
     } else {
-        std::cerr << "Failed to save: " << filename << std::endl;
+        std::cerr << "Failed to save: " << filename << '\n';
     }
 }
 
@@ -32,7 +32,7 @@ void FrameSaver::save(const std::vector<cv::Mat>& frames,
                       int frameNumber)
 {
     if (frames.size() != suffixes.size()) {
-        std::cerr << "Error: Number of frames and suffixes must match!" << std::endl;
+        std::cerr << "Error: Number of frames and suffixes must match!" << '\n';
         return;
     }
 
@@ -49,6 +49,6 @@ void FrameSaver::ensureDirectoryExists() {
     try {
         std::filesystem::create_directories(m_baseFolder);
     } catch (const std::filesystem::filesystem_error& e) {
-        std::cerr << "Failed to create directory: " << e.what() << std::endl;
+        std::cerr << "Failed to create directory: " << e.what() << '\n';
     }
 }
