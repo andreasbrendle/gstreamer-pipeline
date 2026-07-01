@@ -20,7 +20,7 @@ This project is intended as a **learning and demonstration example** to show bas
 - Frame processing using OpenCV (`FrameProcessor`)
 - Saving of original and processed frames (`FrameSaver`)
 - Docker support for easy reproducibility
-- Clean separation between pipeline logic and image processing
+- Clean separation between pipeline logic, image processing and file output
 
 ## Technologies Used
 
@@ -31,18 +31,22 @@ This project is intended as a **learning and demonstration example** to show bas
 - **Docker**
 
 ## Project Structure
+
+```
 gstreamer-pipeline/
-├── src/                    # Source code
-│   ├── main.cpp
-│   ├── gstreamer_pipeline.cpp
-│   ├── FrameProcessor.cpp
-│   └── FrameSaver.cpp
-├── include/                # Header files
-├── docker/                 # Docker configuration
+├── .vscode/                    # VS Code settings
+├── docker/                     # Docker configuration
+├── include/                    # Header files
+├── src/                        # Source code
+├── .clang-tidy                 # Clang-Tidy configuration
+├── .dockerignore
+├── .gitignore
 ├── CMakeLists.txt
+├── README.md
 ├── run.sh
 ├── setup.sh
-└── README.md
+└── test_video.mp4              # Test video file
+```
 
 ## Requirements
 
@@ -53,7 +57,7 @@ gstreamer-pipeline/
 
 ## Build & Run
 
-### Option 1: Local Build (recommended for development)
+### Local Build (recommended for development)
 
 ```bash
 # Install dependencies
@@ -61,11 +65,39 @@ gstreamer-pipeline/
 
 # Build and run the project
 ./run.sh
+```
 
-### Option 2: Run with docker
+### Using Docker
 
-From the repository root:
+The project includes full Docker support for easy and consistent execution:
 
 ```bash
-docker compose -f docker/docker-compose.yml up --build
+cd docker
+docker compose up --build
 ```
+
+Processed frames will be saved to the `output/frames/` directory on your host machine.
+
+**Advantages of using Docker:**
+- No need to install GStreamer or OpenCV locally
+- Reproducible environment
+- Easy to share and run on other machines
+
+## Current Status
+
+- Basic GStreamer pipeline with frame extraction is working
+- Image processing (grayscale conversion) is handled in a separate `FrameProcessor` class
+- Saving of original and processed frames is implemented via `FrameSaver`
+- Docker setup is fully functional
+- Initial code quality tooling (Clang-Tidy) has been introduced
+
+## Known Limitations
+
+- Currently only supports video files as input (camera support is partially prepared)
+- The pipeline is not yet optimized for real-time or high-performance use cases
+
+## Future Ideas
+
+- Add more image processing algorithms (e.g. CLAHE, denoising)
+- Implement unit and functional tests
+- Add support for live camera streams
