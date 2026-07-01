@@ -2,8 +2,21 @@
 
 #include <string>
 
+#include <gst/gst.h>
+
 /**
- * @brief Simple GStreamer pipeline class.
+ * @brief Holds all GStreamer pipeline elements.
+ */
+struct PipelineData {
+    GstElement *pipeline = nullptr;
+    GstElement *source = nullptr;
+    GstElement *decodebin = nullptr;
+    GstElement *convert = nullptr;
+    GstElement *sink = nullptr;
+};
+
+/**
+ * @brief GStreamer pipeline class.
  * 
  * This class is responsible for initializing and running 
  * a basic GStreamer pipeline that reads from a video source 
@@ -29,5 +42,5 @@ public:
     void cleanup();
 
 private:
-    // Pipeline and elements will be added here later
+    PipelineData data; 
 };
