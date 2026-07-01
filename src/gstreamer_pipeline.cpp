@@ -2,19 +2,23 @@
 #include <iostream>
 #include <gst/gst.h>
 #include <gst/app/gstappsink.h>
+#include <opencv2/opencv.hpp>
 
 /* Pipeline elements */
 static GstElement *pipeline     = nullptr;
 static GstElement *source       = nullptr;
 static GstElement *decodebin    = nullptr;
+static GstElement *convert      = nullptr;
 static GstElement *sink         = nullptr;
 
 /**
- * @brief Callback for new pads created by decodebin.
+ * @brief Callback for dynamic pads created by decodebin.
  */
 static void on_pad_added(GstElement *element, GstPad *pad, gpointer data) {
-    GstElement *appsink = (GstElement *)data;
-    GstPad *sinkpad = gst_element_get_static_pad(appsink, "sink");
+    GstElement *videoconvert = (GstElement *)data;
+    
+    GstPad *sinkpad = gst_element_get_static_pad(videoconvert, "sink");
+    if (!sinkpad) return;
 
     if (gst_pad_is_linked(sinkpad)) {
         gst_object_unref(sinkpad);
@@ -23,7 +27,7 @@ static void on_pad_added(GstElement *element, GstPad *pad, gpointer data) {
 
     GstPadLinkReturn ret = gst_pad_link(pad, sinkpad);
     if (ret != GST_PAD_LINK_OK) {
-        std::cerr << "Failed to link decodebin pad to appsink!" << std::endl;
+        std::cerr << "Failed to link decodebin pad!" << std::endl;
     }
 
     gst_object_unref(sinkpad);
@@ -33,7 +37,7 @@ static void on_pad_added(GstElement *element, GstPad *pad, gpointer data) {
  * @brief Initialize GStreamer and create a basic pipeline.
  */
 bool GStreamerPipeline::init() {
-    std::cout << "Initializing GStreamer pipeline with decodebin + appsink..." << std::endl;
+    std::cout << "Initializing GStreamer pipeline..." << std::endl;
 
     gst_init(nullptr, nullptr);
 
@@ -42,9 +46,10 @@ bool GStreamerPipeline::init() {
     // Create Gstreamer elements
     source      = gst_element_factory_make("filesrc", "source");
     decodebin   = gst_element_factory_make("decodebin", "decodebin");
+    convert     = gst_element_factory_make("videoconvert", "convert");
     sink        = gst_element_factory_make("appsink", "sink");
 
-    if (!pipeline || !source || !decodebin || !sink) {
+    if (!pipeline || !source || !decodebin || !convert || !sink) {
         std::cerr << "Failed to create GStreamer elements!" << std::endl;
         return false;
     }
@@ -59,17 +64,33 @@ bool GStreamerPipeline::init() {
                  "emit-signals", TRUE,           
                  "sync", FALSE,                  
                  NULL);
+    
+    // Force output format to BGR to have compatibility with OpenCV
+    GstCaps *caps = gst_caps_from_string("video/x-raw, format=BGR");
+    g_object_set(G_OBJECT(sink), "caps", caps, NULL);
+    gst_caps_unref(caps);
 
     // Add elements to the pipeline
-    gst_bin_add_many(GST_BIN(pipeline), source, decodebin, sink, NULL);
+    gst_bin_add_many(   GST_BIN(pipeline), 
+                        source, 
+                        decodebin, 
+                        convert, 
+                        sink, 
+                        NULL);
 
     // Link source to decodebin
     if (!gst_element_link(source, decodebin)) {
         std::cerr << "Failed to link source to decodebin!" << std::endl;
         return false;
     }
+
+    if (!gst_element_link(convert, sink)) {
+        std::cerr << "Failed to link convert to sink!" << std::endl;
+        return false;
+    }
+
     // Connect to pad-added signal of decodebin
-    g_signal_connect(decodebin, "pad-added", G_CALLBACK(on_pad_added), sink);
+    g_signal_connect(decodebin, "pad-added", G_CALLBACK(on_pad_added), convert);
 
     std::cout << "GStreamer pipeline created successfully." << std::endl;
     return true;
@@ -90,20 +111,65 @@ void GStreamerPipeline::run() {
         return;
     }
 
-    std::cout << "Pipeline is running. Pulling frames from appsink..." << std::endl;
+    std::cout << "Pipeline is running. Processing frames..." << std::endl;
 
-    // Simple loop to pull samples
+    int frame_count = 0;
+    bool first_frame = true;
+
     while (true) {
         /* Pull frames from appsink*/
         GstSample *sample = gst_app_sink_pull_sample(GST_APP_SINK(sink));
         if (!sample) {
-            break; // No more samples (EOS or error)
+            break; // End of stream
+        }
+
+        // Pull the buffer and caps from the sample
+        GstBuffer *buffer   = gst_sample_get_buffer(sample);
+        GstCaps *caps       = gst_sample_get_caps(sample);
+
+        // Map the buffer to access the data
+        if (buffer && caps) {
+            GstStructure *structure = gst_caps_get_structure(caps, 0);
+            const gchar *format = gst_structure_get_string(structure, "format");
+
+            // Get image info from caps
+            gint width, height;                
+            gst_structure_get_int(structure, "width", &width);
+            gst_structure_get_int(structure, "height", &height);
+
+            if (first_frame) {
+                std::cout << "Video info - Format: " << (format ? format : "unknown") 
+                          << ", Size: " << width << "x" << height << std::endl;
+                first_frame = false;
+            }
+            // Only process if format is BGR
+            if (format && strcmp(format, "BGR") == 0) {
+                GstMapInfo map;
+                if (gst_buffer_map(buffer, &map, GST_MAP_READ)) {
+                    cv::Mat frame(height, width, CV_8UC3, (char*)map.data);
+
+                    // Convert to grayscale
+                    cv::Mat gray;
+                    cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+
+                    frame_count++;
+                    if (frame_count % 30 == 0) {
+                        std::cout << "Processed frame " << frame_count 
+                                  << " | Size: " << width << "x" << height 
+                                  << " | Format: " << format << std::endl;
+                    }
+
+                    gst_buffer_unmap(buffer, &map);
+                }
+            } else {
+                std::cout << "Skipping unsupported format: " << (format ? format : "unknown") << std::endl;
+            }
         }
 
         gst_sample_unref(sample);
     }
 
-    std::cout << "No more frames. Pipeline finished." << std::endl;
+    std::cout << "Finished processing " << frame_count << " frames." << std::endl;
 }
 
 /**
