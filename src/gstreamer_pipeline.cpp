@@ -4,14 +4,27 @@
 #include <gst/gst.h>
 #include <gst/app/gstappsink.h>
 #include <opencv2/opencv.hpp>
+#include <cstdlib>
 
-/**
- * @brief Get the directory of the executable.
- */
-std::filesystem::path getExecutableDir() {
+namespace {
+std::filesystem::path resolveProjectRoot() {
+    const char *appRootEnv = std::getenv("APP_ROOT");
+    if (appRootEnv && *appRootEnv) {
+        return std::filesystem::absolute(appRootEnv);
+    }
+
     std::filesystem::path exePath = std::filesystem::read_symlink("/proc/self/exe");
-    return exePath.parent_path();
+    std::filesystem::path exeDir = exePath.parent_path();
+    if (exeDir.filename() == "build" || exeDir.filename() == "bin") {
+        return exeDir.parent_path();
+    }
+    return exeDir;
 }
+
+std::filesystem::path resolveVideoPath(const std::filesystem::path &projectRoot) {
+    return projectRoot / "test_video.mp4";
+}
+} // namespace
 
 /**
  * @brief Callback for dynamic pads created by decodebin.
@@ -56,8 +69,16 @@ bool GStreamerPipeline::init() {
         return false;
     }
 
-    // Set the video file location
-    g_object_set(G_OBJECT(data.source), "location", "../test_video.mp4", NULL);
+    auto projectRoot = resolveProjectRoot();
+    auto videoPath = resolveVideoPath(projectRoot);
+
+    if (!std::filesystem::exists(videoPath)) {
+        std::cerr << "Video file not found at: " << videoPath << std::endl;
+        return false;
+    }
+
+    std::string videoLocation = videoPath.string();
+    g_object_set(G_OBJECT(data.source), "location", videoLocation.c_str(), NULL);
 
     // Configure appsink
     // Enable signals (for later)
@@ -94,9 +115,10 @@ bool GStreamerPipeline::init() {
     // Connect to pad-added signal of decodebin
     g_signal_connect(data.decodebin, "pad-added", G_CALLBACK(on_pad_added), data.convert);
 
-    // Create output directory for frames (in project root, same level as setup.sh and run.sh)
-    auto projectRoot = getExecutableDir().parent_path();
+    // Create output directory for frames in the resolved project root.
     std::filesystem::create_directories(projectRoot / "output" / "frames");
+    std::cout << "Using project root: " << projectRoot << std::endl;
+    std::cout << "Using video file: " << videoPath << std::endl;
 
     std::cout << "GStreamer pipeline created successfully." << std::endl;
     return true;
@@ -160,7 +182,7 @@ void GStreamerPipeline::run() {
 
                     frame_count++;
                     if (frame_count % 30 == 0) {
-                        auto projectRoot = getExecutableDir().parent_path();
+                        auto projectRoot = resolveProjectRoot();
                         std::string filenameOriginal = (projectRoot / "output" / "frames" / ("frame_" + std::to_string(frame_count) + "_original.png")).string();
                         std::string filenameGray    = (projectRoot / "output" / "frames" / ("frame_" + std::to_string(frame_count) + "_gray.png")).string();
                         cv::imwrite(filenameOriginal, frame);

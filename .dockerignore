@@ -1,0 +1,16 @@
+# Ignore build artifacts
+build/
+
+# Ignore Git related files
+.git/
+.gitignore
+
+# Ignore output directory (will be mounted as volume)
+output/
+
+# Ignore the docker folder itself
+docker/
+
+# Do not copy large media files into the image.
+# They will be mounted at runtime via docker-compose.
+# *.mp4

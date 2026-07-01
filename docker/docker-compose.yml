@@ -1,0 +1,15 @@
+services:
+  pipeline:
+    build:
+      context: ..                    # Build context is the project root
+      dockerfile: docker/Dockerfile  # Path to Dockerfile relative to context
+    container_name: gstreamer-pipeline
+    environment:
+      APP_ROOT: /app
+    volumes:
+      # Mount output folder so saved frames are accessible on the host
+      - ../output:/app/output
+      # Mount the test video (read-only)
+      - ../test_video.mp4:/app/test_video.mp4:ro
+    stdin_open: true
+    tty: true
