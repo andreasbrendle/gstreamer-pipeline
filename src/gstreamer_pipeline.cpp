@@ -1,5 +1,6 @@
 #include "gstreamer_pipeline.h"
 #include <iostream>
+#include <filesystem>
 #include <gst/gst.h>
 #include <gst/app/gstappsink.h>
 #include <opencv2/opencv.hpp>
@@ -10,6 +11,12 @@ static GstElement *source       = nullptr;
 static GstElement *decodebin    = nullptr;
 static GstElement *convert      = nullptr;
 static GstElement *sink         = nullptr;
+
+
+std::filesystem::path getExecutableDir() {
+    std::filesystem::path exePath = std::filesystem::read_symlink("/proc/self/exe");
+    return exePath.parent_path();
+}
 
 /**
  * @brief Callback for dynamic pads created by decodebin.
@@ -92,6 +99,10 @@ bool GStreamerPipeline::init() {
     // Connect to pad-added signal of decodebin
     g_signal_connect(decodebin, "pad-added", G_CALLBACK(on_pad_added), convert);
 
+    // Create output directory for frames (in project root, same level as setup.sh and run.sh)
+    auto projectRoot = getExecutableDir().parent_path();
+    std::filesystem::create_directories(projectRoot / "output" / "frames");
+
     std::cout << "GStreamer pipeline created successfully." << std::endl;
     return true;
 }
@@ -154,6 +165,12 @@ void GStreamerPipeline::run() {
 
                     frame_count++;
                     if (frame_count % 30 == 0) {
+                        auto projectRoot = getExecutableDir().parent_path();
+                        std::string filenameOriginal = (projectRoot / "output" / "frames" / ("frame_" + std::to_string(frame_count) + "_original.png")).string();
+                        std::string filenameGray    = (projectRoot / "output" / "frames" / ("frame_" + std::to_string(frame_count) + "_gray.png")).string();
+                        cv::imwrite(filenameOriginal, frame);
+                        cv::imwrite(filenameGray, gray);
+
                         std::cout << "Processed frame " << frame_count 
                                   << " | Size: " << width << "x" << height 
                                   << " | Format: " << format << std::endl;
