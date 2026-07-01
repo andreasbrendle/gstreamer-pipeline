@@ -7,7 +7,7 @@ echo "System update..."
 sudo apt update && sudo apt upgrade -y
 
 # GStreamer installieren
-echo "GStreamer will be installed ..."
+echo "Installing GStreamer..."
 sudo apt install -y \
     gstreamer1.0-tools \
     gstreamer1.0-plugins-good \
@@ -20,8 +20,8 @@ sudo apt install -y \
     libgstreamer-plugins-bad1.0-dev
 
 # OpenCV installieren
-echo "OpenCV wird installiert..."
+echo "Installing OpenCV..."
 sudo apt install -y libopencv-dev python3-opencv
 
-echo "=== Setup abgeschlossen! ==="
+echo "=== Setup completed! ==="
 echo "Du kannst jetzt mit dem Build fortfahren."
