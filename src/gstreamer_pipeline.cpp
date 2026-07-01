@@ -1,4 +1,6 @@
 #include "gstreamer_pipeline.h"
+#include "FrameProcessor.h"
+#include "FrameSaver.h"
 #include <iostream>
 #include <filesystem>
 #include <gst/gst.h>
@@ -115,8 +117,10 @@ bool GStreamerPipeline::init() {
     // Connect to pad-added signal of decodebin
     g_signal_connect(data.decodebin, "pad-added", G_CALLBACK(on_pad_added), data.convert);
 
-    // Create output directory for frames in the resolved project root.
-    std::filesystem::create_directories(projectRoot / "output" / "frames");
+    // Configure the generic frame saver to write into the project output folder.
+    auto outputDir = projectRoot / "output" / "frames";
+    std::filesystem::create_directories(outputDir);
+    frameSaver.setBaseFolder(outputDir);
     std::cout << "Using project root: " << projectRoot << std::endl;
     std::cout << "Using video file: " << videoPath << std::endl;
 
@@ -176,21 +180,14 @@ void GStreamerPipeline::run() {
                 if (gst_buffer_map(buffer, &map, GST_MAP_READ)) {
                     cv::Mat frame(height, width, CV_8UC3, (char*)map.data);
 
-                    // Convert to grayscale
-                    cv::Mat gray;
-                    cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+                    // Use FrameProcessor for image processing
+                    cv::Mat processed = frameProcessor.process(frame);
 
                     frame_count++;
+                    
                     if (frame_count % 30 == 0) {
-                        auto projectRoot = resolveProjectRoot();
-                        std::string filenameOriginal = (projectRoot / "output" / "frames" / ("frame_" + std::to_string(frame_count) + "_original.png")).string();
-                        std::string filenameGray    = (projectRoot / "output" / "frames" / ("frame_" + std::to_string(frame_count) + "_gray.png")).string();
-                        cv::imwrite(filenameOriginal, frame);
-                        cv::imwrite(filenameGray, gray);
-
-                        std::cout << "Processed frame " << frame_count 
-                                  << " | Size: " << width << "x" << height 
-                                  << " | Format: " << format << std::endl;
+                        frameSaver.save(frame, "original", frame_count);
+                        frameSaver.save(processed, "processed", frame_count);
                     }
 
                     gst_buffer_unmap(buffer, &map);

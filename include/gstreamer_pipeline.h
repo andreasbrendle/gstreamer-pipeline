@@ -2,6 +2,8 @@
 
 #include <string>
 
+#include "FrameProcessor.h"
+#include "FrameSaver.h"
 #include <gst/gst.h>
 
 /**
@@ -42,5 +44,7 @@ public:
     void cleanup();
 
 private:
-    PipelineData data; 
+    PipelineData data;
+    FrameProcessor frameProcessor;
+    FrameSaver frameSaver;
 };
