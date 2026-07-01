@@ -39,7 +39,7 @@ public:
 private:
     ProcessingMode m_mode;
 
-    cv::Mat convertToGrayscale(const cv::Mat& input);
+    static cv::Mat convertToGrayscale(const cv::Mat& input);
     // Future methods:
     // cv::Mat applyCLAHE(const cv::Mat& input);
     // cv::Mat applyDenoising(const cv::Mat& input);
