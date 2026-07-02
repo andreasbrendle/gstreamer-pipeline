@@ -34,11 +34,13 @@ std::filesystem::path resolveVideoPath(const std::filesystem::path &projectRoot)
 static void on_pad_added(GstElement *element, GstPad *pad, gpointer data) {
     GstElement *convert = GST_ELEMENT(data);
 
-    GstPad *sinkpad = gst_element_get_static_pad(convert, "sink");
+    auto pad_deleter = [](GstPad* p) { if (p) gst_object_unref(p); };
+    std::unique_ptr<GstPad, decltype(pad_deleter)> sinkpad(
+        gst_element_get_static_pad(convert, "sink"), pad_deleter);
+
     if (!sinkpad) return;
 
     if (gst_pad_is_linked(sinkpad)) {
-        gst_object_unref(sinkpad);
         return;
     }
 
@@ -46,8 +48,6 @@ static void on_pad_added(GstElement *element, GstPad *pad, gpointer data) {
     if (ret != GST_PAD_LINK_OK) {
         std::cerr << "Failed to link decodebin pad!" << '\n';
     }
-
-    gst_object_unref(sinkpad);
 }
 
 /**
@@ -125,9 +125,12 @@ bool GStreamerPipeline::configureElements() {
                  NULL);
     
     // Force output format to BGR to have compatibility with OpenCV
-    GstCaps *caps = gst_caps_from_string("video/x-raw, format=BGR");
+    auto caps_deleter = [](GstCaps* c) { if (c) gst_caps_unref(c); };
+    std::unique_ptr<GstCaps, decltype(caps_deleter)> caps(
+        gst_caps_from_string("video/x-raw, format=BGR"), caps_deleter);
+    
     g_object_set(G_OBJECT(data.sink), "caps", caps, NULL);
-    gst_caps_unref(caps);
+
     return true;
 }
 
@@ -180,12 +183,13 @@ void GStreamerPipeline::setupFrameSaver() {
 void GStreamerPipeline::run() {
     std::cout << "Starting pipeline..." << '\n';
 
-    GstBus *bus = gst_element_get_bus(data.pipeline);
+    auto bus_deleter = [](GstBus* b) { if (b) gst_object_unref(b); };
+    std::unique_ptr<GstBus, decltype(bus_deleter)> bus(
+        gst_element_get_bus(data.pipeline), bus_deleter);
 
     GstStateChangeReturn ret = gst_element_set_state(data.pipeline, GST_STATE_PLAYING);
     if (ret == GST_STATE_CHANGE_FAILURE) {
         std::cerr << "Failed to start pipeline!" << '\n';
-        gst_object_unref(bus);
         return;
     }
 
