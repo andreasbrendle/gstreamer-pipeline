@@ -57,10 +57,10 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copy the compiled binary from the build stage
-COPY --from=builder /app/build/gstreamer_pipeline /app/
+COPY --from=builder /app/build/GStreamerPipeline /app/
 
 # Create output directory for saved frames
 RUN mkdir -p /app/output/frames
 
 # Default command when the container starts
-CMD ["./gstreamer_pipeline"]
+CMD ["./GStreamerPipeline"]

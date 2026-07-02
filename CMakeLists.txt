@@ -24,22 +24,22 @@ pkg_check_modules(GST REQUIRED IMPORTED_TARGET gstreamer-1.0 gstreamer-video-1.0
 find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs)
 
 # === Executable erstellen ===
-add_executable(gstreamer_pipeline
+add_executable(GStreamerPipeline
     src/main.cpp
-    src/gstreamer_pipeline.cpp
+    src/GStreamerPipeline.cpp
     src/FrameProcessor.cpp
     src/FrameSaver.cpp
 )
 
-target_include_directories(gstreamer_pipeline PRIVATE
+target_include_directories(GStreamerPipeline PRIVATE
     ${PROJECT_SOURCE_DIR}/include
 )
 
 # === Bibliotheken verlinken ===
-target_link_libraries(gstreamer_pipeline PRIVATE
+target_link_libraries(GStreamerPipeline PRIVATE
     PkgConfig::GST
     ${OpenCV_LIBS}
 )
 
 # === Compiler Flags ===
-target_compile_options(gstreamer_pipeline PRIVATE -O3 -Wall)
+target_compile_options(GStreamerPipeline PRIVATE -O3 -Wall)

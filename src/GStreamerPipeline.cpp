@@ -1,4 +1,4 @@
-#include "gstreamer_pipeline.h"
+#include "GStreamerPipeline.h"
 #include "FrameProcessor.h"
 #include "FrameSaver.h"
 #include <iostream>
