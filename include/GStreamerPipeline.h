@@ -40,6 +40,11 @@ public:
      * @brief Clean up resources.
      */
     void cleanup();
+    
+    /**
+     * @brief Returns the number of processed frames.
+     */
+    int getFrameCount() const { return frameCount; }
 
 private:
     PipelineData data;

@@ -46,7 +46,7 @@ add_library(pipeline_lib
 )
 
 target_include_directories(pipeline_lib PUBLIC ${PROJECT_SOURCE_DIR}/include)
-target_link_libraries(pipeline_lib ${OpenCV_LIBS})
+target_link_libraries(pipeline_lib ${OpenCV_LIBS} ${GST_LIBRARIES})
 
 # ====================== Main Executable ======================
 add_executable(gstreamer_pipeline
@@ -65,6 +65,9 @@ enable_testing()
 
 add_executable(pipeline_tests
     tests/test_frame_processor.cpp
+    tests/test_frame_saver.cpp
+    tests/test_gstreamer_pipeline_functional.cpp
+    tests/test_pipeline_functional.cpp
 )
 
 target_link_libraries(pipeline_tests
