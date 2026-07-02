@@ -37,7 +37,7 @@ gstreamer-pipeline/
 ├── include/                    # Header files
 ├── src/                        # Source code
 │   ├── main.cpp
-│   ├── gstreamer_pipeline.cpp
+│   ├── GStreamerPipeline.cpp
 │   ├── FrameProcessor.cpp
 │   └── FrameSaver.cpp
 ├── .clang-tidy                 # Clang-Tidy configuration
