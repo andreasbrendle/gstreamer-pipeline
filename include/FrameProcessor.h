@@ -7,7 +7,7 @@
 #include <opencv2/core.hpp>
 
 /**
- * @brief Responsible for processing image frames (color conversion, filtering, etc.).
+ * @brief Processes images (e.g. conversion to grayscale).
  */
 class FrameProcessor {
 public:
@@ -15,6 +15,7 @@ public:
     * @brief Available processing modes for image frames.
     */
     enum class ProcessingMode : std::uint8_t {
+        None,
         Grayscale,
         // Add more modes later, e.g.:
         // CLAHE,

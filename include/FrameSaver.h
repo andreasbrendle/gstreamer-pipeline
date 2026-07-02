@@ -3,7 +3,6 @@
 #include <opencv2/core.hpp>
 #include <filesystem>
 #include <string>
-#include <vector>
 
 /**
  * @brief Saves images to a target directory (single images or sequences).
@@ -26,14 +25,7 @@ public:
      * @param suffix Suffix for the filename (e.g. "original" or "processed")
      * @param frameNumber Frame number (included in the filename)
      */
-    void save(const cv::Mat& frame, const std::string& suffix, int frameNumber);
-
-    /**
-     * @brief Saves multiple images sequentially with incrementing frame numbers.
-     */
-    void save(const std::vector<cv::Mat>& frames, 
-              const std::vector<std::string>& suffixes, 
-              int frameNumber);
+    bool save(const cv::Mat& frame, const std::string& suffix, int frameNumber);
 
 private:
     std::filesystem::path m_baseFolder;

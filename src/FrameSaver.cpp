@@ -5,10 +5,8 @@
 
 #include <utility> 
 #include <iostream> 
-#include <cstddef> 
 #include <filesystem>
 #include <string>
-#include <vector>
 
 FrameSaver::FrameSaver(std::filesystem::path baseFolder)
     : m_baseFolder(std::move(baseFolder))
@@ -21,34 +19,25 @@ void FrameSaver::setBaseFolder(const std::filesystem::path& baseFolder) {
     ensureDirectoryExists();
 }
 
-void FrameSaver::save(const cv::Mat& frame, const std::string& suffix, int frameNumber) {
+bool FrameSaver::save(const cv::Mat& frame, const std::string& suffix, int frameNumber) {
     if (frame.empty()) {
-        return;
+        return false;
     }
 
     const std::filesystem::path filename = buildFilename(frameNumber, suffix);
 
     if (cv::imwrite(filename.string(), frame)) {
         std::cout << "Saved: " << filename << '\n';
-    } else {
-        std::cerr << "Failed to save: " << filename << '\n';
+        return true;
     }
+    
+    std::cerr << "Failed to save: " << filename << '\n';
+    return false;
 }
 
-void FrameSaver::save(const std::vector<cv::Mat>& frames,
-                      const std::vector<std::string>& suffixes,
-                      int frameNumber)
-{
-    if (frames.size() != suffixes.size()) {
-        std::cerr << "Error: Number of frames and suffixes must match!" << '\n';
-        return;
-    }
-
-    for (size_t i = 0; i < frames.size(); ++i) {
-        save(frames[i], suffixes[i], frameNumber);
-    }
-}
-
+/**
+ * @brief Generates a filename in the format: frame_000042_original.png
+ */
 std::filesystem::path FrameSaver::buildFilename(int frameNumber, const std::string& suffix) const {
     return m_baseFolder / ("frame_" + std::to_string(frameNumber) + "_" + suffix + ".png");
 }

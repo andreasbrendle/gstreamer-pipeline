@@ -26,6 +26,9 @@ cv::Mat FrameProcessor::process(const cv::Mat& input) {
     }
 }
 
+/**
+ * @brief Converts a BGR image to grayscale.
+ */
 cv::Mat FrameProcessor::convertToGrayscale(const cv::Mat& input) {
     cv::Mat output;
     cv::cvtColor(input, output, cv::COLOR_BGR2GRAY);
