@@ -30,4 +30,8 @@ echo ""
 echo "=== Starting Pipeline ==="
 
 # Run the executable
-./GStreamerPipeline
+./gstreamer_pipeline
+
+echo ""
+echo "=== Running Tests ==="
+./pipeline_tests

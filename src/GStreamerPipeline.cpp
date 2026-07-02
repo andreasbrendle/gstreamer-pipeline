@@ -99,6 +99,7 @@ bool GStreamerPipeline::createElements() {
         std::cerr << "Failed to create GStreamer elements!" << '\n';
         return false;
     }
+    return true;
 }
 
 /**
