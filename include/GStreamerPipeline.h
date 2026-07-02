@@ -1,10 +1,9 @@
 #pragma once
 
-#include <string>
-
 #include "FrameProcessor.h"
 #include "FrameSaver.h"
 #include <gst/gst.h>
+#include <string>
 
 /**
  * @brief Holds all GStreamer pipeline elements.
@@ -20,9 +19,8 @@ struct PipelineData {
 /**
  * @brief GStreamer pipeline class.
  * 
- * This class is responsible for initializing and running 
- * a basic GStreamer pipeline that reads from a video source 
- * and pushes frames to an appsink.
+ * Responsible for initializing, running and cleaning up a basic
+ * GStreamer video pipeline that extracts and processes frames.
  */
 class GStreamerPipeline {
 public:
@@ -47,4 +45,56 @@ private:
     PipelineData data;
     FrameProcessor frameProcessor;
     FrameSaver frameSaver;
+
+    int frameCount = 0;
+
+    /**
+     * @brief Create all required GStreamer elements.
+     *
+     * @return true if all elements were created successfully.
+     */
+    bool createElements();
+
+    /**
+     * @brief Configure GStreamer elements (set properties and caps).
+     *
+     * @return true if configuration was successful.
+     */
+    bool configureElements();
+
+    /**
+     * @brief Link all GStreamer elements together and connect signals.
+     *
+     * @return true if linking was successful.
+     */
+    bool linkElements();
+
+    /**
+     * @brief Configure the output directory for the FrameSaver.
+     */
+    void setupFrameSaver();
+
+    /**
+     * @brief Main processing loop. Pulls samples from appsink until EOS.
+     */
+    void processSamples();
+
+    /**
+     * @brief Handles a single sample from the appsink.
+     *
+     * @param sample        The GStreamer sample to process
+     * @param frameCount    Reference to the current frame counter
+     * @param isFirstFrame  Reference to flag indicating the first frame
+     */
+    void handleSample(GstSample *sample, int &frameCount, bool &isFirstFrame);
+    
+    /**
+     * @brief Processes a single BGR frame (conversion + optional saving).
+     *
+     * @param buffer   The GStreamer buffer containing the frame data
+     * @param width    Width of the frame
+     * @param height   Height of the frame
+     * @param frameCount Reference to the current frame counter
+     */
+    void processBGRFrame(GstBuffer *buffer, gint width, gint height, int &frameCount);
 };
