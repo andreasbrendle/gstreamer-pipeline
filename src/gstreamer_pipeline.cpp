@@ -83,8 +83,6 @@ bool GStreamerPipeline::init() {
     g_object_set(G_OBJECT(data.source), "location", videoLocation.c_str(), NULL);
 
     // Configure appsink
-    // Enable signals (for later)
-    // Don't sync to clock for now
     g_object_set(G_OBJECT(data.sink),
                  "emit-signals", TRUE,           
                  "sync", FALSE,                  

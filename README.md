@@ -1,26 +1,24 @@
 # GStreamer Video Processing Pipeline
 
-A small example project for processing video data using **GStreamer** and **OpenCV**.
+A small demonstration project built to gain practical experience with **GStreamer** and **OpenCV**.  
+The goal was to build a working video pipeline that reads a video, processes frames, and saves selected frames to disk.
 
-The project demonstrates how to build a video pipeline with GStreamer, extract frames, and process them using OpenCV. It serves as a practical introduction to real-time image processing and embedded video pipelines.
+This project serves as a learning example to demonstrate basic competence in building multimedia pipelines with GStreamer.
 
 ## Project Goal
 
-The goal of this project was to gain practical experience with GStreamer by building a working pipeline that:
-
-- Reads a video file
-- Processes the frames using OpenCV (e.g. grayscale conversion)
-- Saves every Nth frame (both original and processed version) to disk
-
-This project is intended as a **learning and demonstration example** to show basic competence in working with GStreamer and OpenCV.
+- Learn how to build and control a GStreamer pipeline in C++
+- Extract and process video frames using OpenCV
+- Implement clean separation between pipeline logic, image processing, and file output
+- Explore Docker as a way to make the project easily reproducible
 
 ## Features
 
-- GStreamer pipeline using `decodebin` and hardware-accelerated conversion
-- Frame processing using OpenCV (`FrameProcessor`)
-- Saving of original and processed frames (`FrameSaver`)
-- Docker support for easy reproducibility
-- Clean separation between pipeline logic, image processing and file output
+- GStreamer pipeline with `decodebin` and hardware-accelerated video conversion
+- Frame processing handled in a dedicated `FrameProcessor` class
+- Saving of both original and processed frames using a `FrameSaver` class
+- Docker support for consistent execution across environments
+- Basic code quality setup using Clang-Tidy
 
 ## Technologies Used
 
@@ -32,12 +30,16 @@ This project is intended as a **learning and demonstration example** to show bas
 
 ## Project Structure
 
-```
+```text
 gstreamer-pipeline/
 ├── .vscode/                    # VS Code settings
 ├── docker/                     # Docker configuration
 ├── include/                    # Header files
 ├── src/                        # Source code
+│   ├── main.cpp
+│   ├── gstreamer_pipeline.cpp
+│   ├── FrameProcessor.cpp
+│   └── FrameSaver.cpp
 ├── .clang-tidy                 # Clang-Tidy configuration
 ├── .dockerignore
 ├── .gitignore
@@ -79,22 +81,23 @@ docker compose up --build
 Processed frames will be saved to the `output/frames/` directory on your host machine.
 
 **Advantages of using Docker:**
+
 - No need to install GStreamer or OpenCV locally
 - Reproducible environment
 - Easy to share and run on other machines
 
 ## Current Status
 
-- Basic GStreamer pipeline with frame extraction is working
-- Image processing (grayscale conversion) is handled in a separate `FrameProcessor` class
-- Saving of original and processed frames is implemented via `FrameSaver`
-- Docker setup is fully functional
-- Initial code quality tooling (Clang-Tidy) has been introduced
+- Functional GStreamer pipeline with frame extraction
+- Image processing and frame saving logic separated into dedicated classes
+- Docker environment fully working
+- Initial static code analysis with Clang-Tidy in place
 
 ## Known Limitations
 
-- Currently only supports video files as input (camera support is partially prepared)
-- The pipeline is not yet optimized for real-time or high-performance use cases
+- Currently only supports video files as input
+- No real-time optimizations implemented yet
+- Testing coverage is still limited
 
 ## Future Ideas
 
