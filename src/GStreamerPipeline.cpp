@@ -228,7 +228,7 @@ void GStreamerPipeline::processSamples() {
     while (true) {
         /* Pull frames from appsink*/
         GstSample *sample = gst_app_sink_pull_sample(GST_APP_SINK(data.sink));
-        if (sample != nullptr) {
+        if (sample == nullptr) {
             break; // End of stream reached
         }
 
