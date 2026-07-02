@@ -6,12 +6,12 @@
 #include <vector>
 
 /**
- * @brief Generic class for saving image frames to disk.
+ * @brief Saves images to a target directory (single images or sequences).
  */
 class FrameSaver {
 public:
     /**
-     * @brief Constructor.
+     * @brief Constructor with optional base folder.
      */
     explicit FrameSaver(std::filesystem::path baseFolder = "output/frames");
 
@@ -21,14 +21,15 @@ public:
     void setBaseFolder(const std::filesystem::path& baseFolder);
 
     /**
-     * @brief Saves a single frame with a custom suffix.
-     * 
-     * Example: save(frame, "original", 30) → frame_30_original.png
+     * @brief Saves a single image.
+     * @param frame The image to save
+     * @param suffix Suffix for the filename (e.g. "original" or "processed")
+     * @param frameNumber Frame number (included in the filename)
      */
     void save(const cv::Mat& frame, const std::string& suffix, int frameNumber);
 
     /**
-     * @brief Saves multiple frames at once with corresponding suffixes.
+     * @brief Saves multiple images sequentially with incrementing frame numbers.
      */
     void save(const std::vector<cv::Mat>& frames, 
               const std::vector<std::string>& suffixes, 

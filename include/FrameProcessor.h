@@ -7,20 +7,20 @@
 #include <opencv2/core.hpp>
 
 /**
- * @brief Available processing modes for image frames.
- */
-enum class ProcessingMode : std::uint8_t {
-    Grayscale,
-    // Add more modes later, e.g.:
-    // CLAHE,
-    // Denoise
-};
-
-/**
  * @brief Responsible for processing image frames (color conversion, filtering, etc.).
  */
 class FrameProcessor {
 public:
+    /**
+    * @brief Available processing modes for image frames.
+    */
+    enum class ProcessingMode : std::uint8_t {
+        Grayscale,
+        // Add more modes later, e.g.:
+        // CLAHE,
+        // Denoise
+    };
+
     /**
      * @brief Constructor with optional processing mode.
      */
@@ -29,7 +29,7 @@ public:
     /**
      * @brief Processes the input frame according to the current mode.
      * 
-     * @param input Input frame (BGR expected)
+     * @param input Input image in BGR format
      * @return Processed frame
      */
     cv::Mat process(const cv::Mat& input);
