@@ -1,9 +1,9 @@
 {
   "clangd.path": "clangd",
   "clangd.arguments": [
-    "-j=1",   
     "--compile-commands-dir=${workspaceFolder}/build",
     "--background-index",
+     "--background-index-priority=low", 
     "--clang-tidy",
     "--completion-style=detailed"
   ],

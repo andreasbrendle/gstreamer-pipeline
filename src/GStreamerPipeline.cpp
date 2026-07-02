@@ -51,15 +51,16 @@ std::filesystem::path resolveVideoPath(const std::filesystem::path &projectRoot)
 /**
  * @brief Callback for dynamic pads created by decodebin.
  */
-static void on_pad_added(GstElement *src, GstPad *pad, gpointer data) {
+static void on_pad_added([[maybe_unused]]GstElement *src, GstPad *pad, gpointer data) {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast)
     GstElement *convert = GST_ELEMENT(data);
 
-    std::unique_ptr<GstPad, GstObjectDeleter> sinkpad(
-        GST_PAD(gst_element_get_static_pad(convert, "sink")));
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast, bugprone-casting-through-void)
+    std::unique_ptr<GstPad, GstObjectDeleter> sinkpad(GST_PAD(gst_element_get_static_pad(convert, "sink")));
     
     if (!sinkpad) {return;}
 
-    if (gst_pad_is_linked(sinkpad.get()) == TRUE) {
+    if (gst_pad_is_linked(sinkpad.get()) != FALSE) {
         return;
     }
 
@@ -135,19 +136,21 @@ bool GStreamerPipeline::configureElements() const {
         return false;
     }
 
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast, cppcoreguidelines-pro-type-vararg, bugprone-va-arg)
     g_object_set(G_OBJECT(data.source), "location", videoPath.string().c_str(), NULL);
 
-    // Configure appsink
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast, cppcoreguidelines-pro-type-vararg, bugprone-va-arg)
     g_object_set(G_OBJECT(data.sink),
                  "emit-signals", TRUE,           
                  "sync", FALSE,                  
                  NULL);
     
     // Force output format to BGR to have compatibility with OpenCV
-    auto caps_deleter = [](GstCaps* c) { if (c) gst_caps_unref(c); };
+    auto caps_deleter = [](GstCaps* c) { if (c != nullptr) gst_caps_unref(c); };
     std::unique_ptr<GstCaps, decltype(caps_deleter)> caps(
         gst_caps_from_string("video/x-raw, format=BGR"), caps_deleter);
     
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast, cppcoreguidelines-pro-type-vararg, bugprone-va-arg)
     g_object_set(G_OBJECT(data.sink), "caps", caps.get(), NULL);
 
     return true;
@@ -160,6 +163,7 @@ bool GStreamerPipeline::configureElements() const {
  */
 bool GStreamerPipeline::linkElements() const {
     // Add elements to the pipeline
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast, bugprone-casting-through-void, cppcoreguidelines-pro-type-vararg)
     gst_bin_add_many(GST_BIN(data.pipeline), 
                      data.source, 
                      data.decodebin, 
@@ -179,6 +183,7 @@ bool GStreamerPipeline::linkElements() const {
     }
 
     // Connect to pad-added signal of decodebin
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast, bugprone-casting-through-void)
     g_signal_connect(data.decodebin, "pad-added", G_CALLBACK(on_pad_added), data.convert);
     return true;
 }
@@ -202,8 +207,8 @@ void GStreamerPipeline::setupFrameSaver() {
 void GStreamerPipeline::run() {
     std::cout << "Starting pipeline..." << '\n';
 
-    std::unique_ptr<GstBus, GstObjectDeleter> bus(
-        GST_BUS(gst_element_get_bus(data.pipeline)));
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast, bugprone-casting-through-void, cppcoreguidelines-pro-type-vararg)
+    std::unique_ptr<GstBus, GstObjectDeleter> bus(GST_BUS(gst_element_get_bus(data.pipeline)));
 
     GstStateChangeReturn ret = gst_element_set_state(data.pipeline, GST_STATE_PLAYING);
     if (ret == GST_STATE_CHANGE_FAILURE) {
@@ -227,6 +232,7 @@ void GStreamerPipeline::processSamples() {
 
     while (true) {
         /* Pull frames from appsink*/
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast, bugprone-casting-through-void)
         GstSample *sample = gst_app_sink_pull_sample(GST_APP_SINK(data.sink));
         if (sample == nullptr) {
             break; // End of stream reached
