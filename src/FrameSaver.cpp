@@ -1,9 +1,17 @@
 #include "FrameSaver.h"
-#include <filesystem>
-#include <iostream>
 
-FrameSaver::FrameSaver(const std::filesystem::path& baseFolder)
-    : m_baseFolder(baseFolder)
+//OpenCV
+#include <opencv2/imgcodecs.hpp> // for cv::imwrite  
+
+#include <utility> 
+#include <iostream> 
+#include <cstddef> 
+#include <filesystem>
+#include <string>
+#include <vector>
+
+FrameSaver::FrameSaver(std::filesystem::path baseFolder)
+    : m_baseFolder(std::move(baseFolder))
 {
     ensureDirectoryExists();
 }
@@ -18,7 +26,7 @@ void FrameSaver::save(const cv::Mat& frame, const std::string& suffix, int frame
         return;
     }
 
-    std::filesystem::path filename = buildFilename(frameNumber, suffix);
+    const std::filesystem::path filename = buildFilename(frameNumber, suffix);
 
     if (cv::imwrite(filename.string(), frame)) {
         std::cout << "Saved: " << filename << '\n';

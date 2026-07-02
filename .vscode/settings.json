@@ -1,12 +1,13 @@
 {
   "clangd.path": "clangd",
   "clangd.arguments": [
+    "-j=1",   
     "--compile-commands-dir=${workspaceFolder}/build",
     "--background-index",
-    "--completion-style=detailed",
-    "--header-insertion=iwyu",
-    "--clang-tidy"
+    "--clang-tidy",
+    "--completion-style=detailed"
   ],
-  "C_Cpp.intelliSenseEngine": "Disabled",
+  "C_Cpp.intelliSenseEngine": "disabled",
+  "clangd.detectExtensionConflicts": true,
   "workbench.editor.wrapTabs": true
 }

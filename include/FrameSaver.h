@@ -1,6 +1,6 @@
 #pragma once
 
-#include <opencv2/opencv.hpp>
+#include <opencv2/core.hpp>
 #include <filesystem>
 #include <string>
 #include <vector>
@@ -13,7 +13,7 @@ public:
     /**
      * @brief Constructor.
      */
-    explicit FrameSaver(const std::filesystem::path& baseFolder = "output/frames");
+    explicit FrameSaver(std::filesystem::path baseFolder = "output/frames");
 
     /**
      * @brief Sets the base output folder.

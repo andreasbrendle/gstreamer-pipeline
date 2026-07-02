@@ -1,21 +1,41 @@
 #include "GStreamerPipeline.h"
 #include "FrameProcessor.h"
 #include "FrameSaver.h"
+#include "glibconfig.h"
+
 #include <iostream>
 #include <filesystem>
+#include <string>
+#include <cstring>
+#include <cstdlib>
+#include <memory>
+
+// GStreamer
 #include <gst/gst.h>
 #include <gst/app/gstappsink.h>
-#include <opencv2/opencv.hpp>
-#include <cstdlib>
+#include <gst/gstpad.h>     
+#include <gst/gstcaps.h>    
+#include <gst/gstbus.h> 
 
+// ====================== Custom Deleter ======================
+struct GstObjectDeleter {
+    template <typename T>
+    void operator()(T* obj) const {
+        if (obj) {
+            gst_object_unref(GST_OBJECT(obj));
+        }
+    }
+};
+
+// ====================== Namespace ======================
 namespace {
 std::filesystem::path resolveProjectRoot() {
     const char *appRootEnv = std::getenv("APP_ROOT");
-    if (appRootEnv && *appRootEnv) {
+    if (appRootEnv != nullptr && *appRootEnv != '\0') {
         return std::filesystem::absolute(appRootEnv);
     }
 
-    std::filesystem::path exePath = std::filesystem::read_symlink("/proc/self/exe");
+    const std::filesystem::path exePath = std::filesystem::read_symlink("/proc/self/exe");
     std::filesystem::path exeDir = exePath.parent_path();
     if (exeDir.filename() == "build" || exeDir.filename() == "bin") {
         return exeDir.parent_path();
@@ -31,20 +51,19 @@ std::filesystem::path resolveVideoPath(const std::filesystem::path &projectRoot)
 /**
  * @brief Callback for dynamic pads created by decodebin.
  */
-static void on_pad_added(GstElement *element, GstPad *pad, gpointer data) {
+static void on_pad_added(GstElement *src, GstPad *pad, gpointer data) {
     GstElement *convert = GST_ELEMENT(data);
 
-    auto pad_deleter = [](GstPad* p) { if (p) gst_object_unref(p); };
-    std::unique_ptr<GstPad, decltype(pad_deleter)> sinkpad(
-        gst_element_get_static_pad(convert, "sink"), pad_deleter);
+    std::unique_ptr<GstPad, GstObjectDeleter> sinkpad(
+        GST_PAD(gst_element_get_static_pad(convert, "sink")));
+    
+    if (!sinkpad) {return;}
 
-    if (!sinkpad) return;
-
-    if (gst_pad_is_linked(sinkpad)) {
+    if (gst_pad_is_linked(sinkpad.get()) == TRUE) {
         return;
     }
 
-    GstPadLinkReturn ret = gst_pad_link(pad, sinkpad);
+    GstPadLinkReturn ret = gst_pad_link(pad, sinkpad.get());
     if (ret != GST_PAD_LINK_OK) {
         std::cerr << "Failed to link decodebin pad!" << '\n';
     }
@@ -107,7 +126,7 @@ bool GStreamerPipeline::createElements() {
  *
  * @return true if configuration was successful, false otherwise.
  */
-bool GStreamerPipeline::configureElements() {
+bool GStreamerPipeline::configureElements() const {
     auto projectRoot    = resolveProjectRoot();
     auto videoPath      = resolveVideoPath(projectRoot);
 
@@ -129,7 +148,7 @@ bool GStreamerPipeline::configureElements() {
     std::unique_ptr<GstCaps, decltype(caps_deleter)> caps(
         gst_caps_from_string("video/x-raw, format=BGR"), caps_deleter);
     
-    g_object_set(G_OBJECT(data.sink), "caps", caps, NULL);
+    g_object_set(G_OBJECT(data.sink), "caps", caps.get(), NULL);
 
     return true;
 }
@@ -139,7 +158,7 @@ bool GStreamerPipeline::configureElements() {
  *
  * @return true if linking was successful, false otherwise.
  */
-bool GStreamerPipeline::linkElements() {
+bool GStreamerPipeline::linkElements() const {
     // Add elements to the pipeline
     gst_bin_add_many(GST_BIN(data.pipeline), 
                      data.source, 
@@ -149,12 +168,12 @@ bool GStreamerPipeline::linkElements() {
                      NULL);
 
     // Link source to decodebin
-    if (!gst_element_link(data.source, data.decodebin)) {
+    if (gst_element_link(data.source, data.decodebin) == FALSE) {
         std::cerr << "Failed to link source to decodebin!" << '\n';
         return false;
     }
 
-    if (!gst_element_link(data.convert, data.sink)) {
+    if (gst_element_link(data.convert, data.sink) == FALSE) {
         std::cerr << "Failed to link convert to sink!" << '\n';
         return false;
     }
@@ -183,9 +202,8 @@ void GStreamerPipeline::setupFrameSaver() {
 void GStreamerPipeline::run() {
     std::cout << "Starting pipeline..." << '\n';
 
-    auto bus_deleter = [](GstBus* b) { if (b) gst_object_unref(b); };
-    std::unique_ptr<GstBus, decltype(bus_deleter)> bus(
-        gst_element_get_bus(data.pipeline), bus_deleter);
+    std::unique_ptr<GstBus, GstObjectDeleter> bus(
+        GST_BUS(gst_element_get_bus(data.pipeline)));
 
     GstStateChangeReturn ret = gst_element_set_state(data.pipeline, GST_STATE_PLAYING);
     if (ret == GST_STATE_CHANGE_FAILURE) {
@@ -210,11 +228,11 @@ void GStreamerPipeline::processSamples() {
     while (true) {
         /* Pull frames from appsink*/
         GstSample *sample = gst_app_sink_pull_sample(GST_APP_SINK(data.sink));
-        if (!sample) {
+        if (sample != nullptr) {
             break; // End of stream reached
         }
 
-        handleSample(sample, localFrameCount, isFirstFrame);
+        handleSample(sample, isFirstFrame, localFrameCount);
         gst_sample_unref(sample);
     }
     frameCount = localFrameCount; // store final count
@@ -223,12 +241,12 @@ void GStreamerPipeline::processSamples() {
 /**
  * @brief Handles a single sample from the appsink.
  */
-void GStreamerPipeline::handleSample(GstSample *sample, int &frameCount, bool &isFirstFrame) {
+void GStreamerPipeline::handleSample(GstSample *sample, bool &isFirstFrame, int &frameCount) {
     // Pull the buffer and caps from the sample
     GstBuffer *buffer   = gst_sample_get_buffer(sample);
     GstCaps *caps       = gst_sample_get_caps(sample);
 
-    if (!buffer || !caps) return;
+    if (buffer == nullptr || caps == nullptr) {return;}
 
     GstStructure *structure = gst_caps_get_structure(caps, 0);
     const gchar  *format    = gst_structure_get_string(structure, "format");
@@ -240,15 +258,15 @@ void GStreamerPipeline::handleSample(GstSample *sample, int &frameCount, bool &i
     gst_structure_get_int(structure, "height", &height);
 
     if (isFirstFrame) {
-        std::cout << "Video info - Format: " << (format ? format : "unknown") 
+        std::cout << "Video info - Format: " << (format != nullptr ? format : "unknown") 
                   << ", Size: " << width << "x" << height << '\n';
         isFirstFrame = false;
     }
 
-    if (format && strcmp(format, "BGR") == 0) {
+    if (format != nullptr && strcmp(format, "BGR") == 0) {
         processBGRFrame(buffer, width, height, frameCount);
     } else {
-        std::cout << "Skipping unsupported format: " << (format ? format : "unknown") << '\n';
+        std::cout << "Skipping unsupported format: " << (format != nullptr ? format : "unknown") << '\n';
     }
 }
 
@@ -258,12 +276,12 @@ void GStreamerPipeline::handleSample(GstSample *sample, int &frameCount, bool &i
 void GStreamerPipeline::processBGRFrame(GstBuffer *buffer, gint width, gint height, int &frameCount) {
 
     GstMapInfo map;
-    if (!gst_buffer_map(buffer, &map, GST_MAP_READ)) return;
+    if (gst_buffer_map(buffer, &map, GST_MAP_READ)== FALSE) {return;}
 
-    cv::Mat frame(height, width, CV_8UC3, (char*)map.data);
+    const cv::Mat frame(height, width, CV_8UC3, static_cast<void*>(map.data));
 
     // Use FrameProcessor for image processing
-    cv::Mat processed = frameProcessor.process(frame);
+    const cv::Mat processed = frameProcessor.process(frame);
 
     frameCount++;
                     
@@ -278,10 +296,10 @@ void GStreamerPipeline::processBGRFrame(GstBuffer *buffer, gint width, gint heig
 /**
  * @brief Clean up GStreamer resources.
  */
-void GStreamerPipeline::cleanup() {
+void GStreamerPipeline::cleanup() const {
     std::cout << "Cleaning up..." << '\n';
 
-    if (data.pipeline) {
+    if (data.pipeline !=nullptr) {
         gst_element_set_state(data.pipeline, GST_STATE_NULL);
         gst_object_unref(data.pipeline);
     }

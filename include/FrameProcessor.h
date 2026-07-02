@@ -1,7 +1,10 @@
 #pragma once
 
 #include <cstdint>
+
+//OpenCV
 #include <opencv2/opencv.hpp>
+#include <opencv2/core.hpp>
 
 /**
  * @brief Available processing modes for image frames.

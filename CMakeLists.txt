@@ -8,11 +8,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # ====================== Clang-Tidy ======================
 find_program(CLANG_TIDY_EXE NAMES clang-tidy)
 if(CLANG_TIDY_EXE)
-    set(CMAKE_CXX_CLANG_TIDY
-        "${CLANG_TIDY_EXE}"
-        "-header-filter=.*"
-    )
-    message(STATUS "Clang-Tidy enabled")
+    # Simply call clang-tidy. It will automatically find and use your `.clang-tidy` file!
+    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE}")
+    message(STATUS "Clang-Tidy enabled globally via .clang-tidy file")
 endif()
 
 # ====================== Google Test ======================
@@ -77,3 +75,9 @@ target_link_libraries(pipeline_tests
 
 include(GoogleTest)
 gtest_discover_tests(pipeline_tests)
+
+# ====================== Disable Clang-Tidy for Third-Party ======================
+# Moving this to the very bottom ensures the GoogleTest targets actually exist before modifying them
+if(CLANG_TIDY_EXE)
+    set_target_properties(gtest gtest_main gmock gmock_main PROPERTIES CXX_CLANG_TIDY "")
+endif()

@@ -1,5 +1,9 @@
 #include "FrameProcessor.h"
 
+// OpenCV
+#include <opencv2/core.hpp>     
+#include <opencv2/imgproc.hpp>
+
 FrameProcessor::FrameProcessor(ProcessingMode mode)
     : m_mode(mode) {}
 

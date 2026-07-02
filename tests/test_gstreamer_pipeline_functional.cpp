@@ -4,7 +4,7 @@
 TEST(GStreamerPipelineFunctionalTest, InitializesSuccessfully) {
     GStreamerPipeline pipeline;
 
-    bool result = pipeline.init();
+    const bool result = pipeline.init();
 
     EXPECT_TRUE(result);
 }
@@ -17,5 +17,5 @@ TEST(GStreamerPipelineFunctionalTest, ProcessesFrames) {
     pipeline.run();
     pipeline.cleanup();
 
-    EXPECT_GT(pipeline.getFrameCount(), 0); // Es sollten Frames verarbeitet worden sein
+    EXPECT_GT(pipeline.getFrameCount(), 0);
 }

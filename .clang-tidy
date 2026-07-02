@@ -6,6 +6,8 @@ Checks: >
   performance-*,
   readability-*,
   misc-*,
+  -misc-include-cleaner,
+  -cppcoreguidelines-pro-type-cstyle-cast,
   -modernize-use-trailing-return-type,
   -readability-magic-numbers,
   -readability-identifier-length,
@@ -14,19 +16,22 @@ Checks: >
   -cppcoreguidelines-owning-memory,
   -cppcoreguidelines-avoid-magic-numbers,
   -modernize-use-nodiscard,
-  -bugprone-easily-swappable-parameters
+  -bugprone-easily-swappable-parameters,    -bugprone-easily-swappable-parameters.ModelImplicitConversions
+  -bugprone-casting-through-void,
+  -cppcoreguidelines-pro-type-cstyle-cast
 
 WarningsAsErrors: ''
-HeaderFilterRegex: '.*'
+
+# This ensures only your specific project folders throw header warnings
+# This tells Clang-Tidy to ignore any file path containing "build/" or system libraries
+HeaderFilterRegex: '^(?!.*(build/|_deps/|/usr/)).*'
+
 FormatStyle: file
 
-# Optional: Check options for fine-tuning
-
 CheckOptions:
-
-- key: readability-identifier-naming.ClassCase
+  - key: readability-identifier-naming.ClassCase
     value: CamelCase
-- key: readability-identifier-naming.FunctionCase
+  - key: readability-identifier-naming.FunctionCase
     value: camelBack
-- key: readability-identifier-naming.VariableCase
+  - key: readability-identifier-naming.VariableCase
     value: camelBack

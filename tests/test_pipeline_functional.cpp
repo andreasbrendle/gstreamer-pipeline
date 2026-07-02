@@ -1,13 +1,16 @@
 #include <gtest/gtest.h>
 #include "FrameProcessor.h"
 #include "FrameSaver.h"
-#include <opencv2/opencv.hpp>
+
 #include <filesystem>
+
+//OpenCV
+#include <opencv2/core.hpp>
 
 TEST(PipelineFunctionalTest, ProcessesAndSavesFrames) {
     // Arrange
-    cv::Mat testFrame(100, 100, CV_8UC3, cv::Scalar(50, 100, 150));
-    std::string tempDir = testing::TempDir() + "pipeline_functional_test/";
+    const cv::Mat testFrame(100, 100, CV_8UC3, cv::Scalar(50, 100, 150));
+    const std::string tempDir = testing::TempDir() + "pipeline_functional_test/";
     std::filesystem::create_directories(tempDir);
 
     FrameProcessor processor;
@@ -17,7 +20,7 @@ TEST(PipelineFunctionalTest, ProcessesAndSavesFrames) {
 
     // Act - simuliere 100 Frames, speichere jeden 30. Frame
     for (int i = 1; i <= 100; ++i) {
-        cv::Mat processed = processor.process(testFrame);
+        const cv::Mat processed = processor.process(testFrame);
 
         if (i % 30 == 0) {
             saver.save(testFrame, "original", i);

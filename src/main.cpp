@@ -6,7 +6,7 @@ int main() {
 
     GStreamerPipeline pipeline;
 
-    bool initialized = pipeline.init();
+    const bool initialized = pipeline.init();
     if (!initialized) {
         std::cerr << "Failed to initialize GStreamer pipeline!" << '\n';
         return -1;

@@ -3,7 +3,6 @@
 #include "FrameProcessor.h"
 #include "FrameSaver.h"
 #include <gst/gst.h>
-#include <string>
 
 /**
  * @brief Holds all GStreamer pipeline elements.
@@ -39,7 +38,7 @@ public:
     /**
      * @brief Clean up resources.
      */
-    void cleanup();
+    void cleanup() const;
     
     /**
      * @brief Returns the number of processed frames.
@@ -65,14 +64,14 @@ private:
      *
      * @return true if configuration was successful.
      */
-    bool configureElements();
+    bool configureElements() const;
 
     /**
      * @brief Link all GStreamer elements together and connect signals.
      *
      * @return true if linking was successful.
      */
-    bool linkElements();
+    bool linkElements() const;
 
     /**
      * @brief Configure the output directory for the FrameSaver.
@@ -91,7 +90,7 @@ private:
      * @param frameCount    Reference to the current frame counter
      * @param isFirstFrame  Reference to flag indicating the first frame
      */
-    void handleSample(GstSample *sample, int &frameCount, bool &isFirstFrame);
+    void handleSample(GstSample *sample, bool &isFirstFrame, int &frameCount);
     
     /**
      * @brief Processes a single BGR frame (conversion + optional saving).
