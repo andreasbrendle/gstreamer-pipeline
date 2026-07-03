@@ -1,10 +1,10 @@
 #include "FrameSaver.h"
+#include "Logger.h"
 
 //OpenCV
 #include <opencv2/imgcodecs.hpp> // for cv::imwrite  
 
 #include <utility> 
-#include <iostream> 
 #include <filesystem>
 #include <string>
 
@@ -27,11 +27,11 @@ bool FrameSaver::save(const cv::Mat& frame, const std::string& suffix, int frame
     const std::filesystem::path filename = buildFilename(frameNumber, suffix);
 
     if (cv::imwrite(filename.string(), frame)) {
-        std::cout << "Saved: " << filename << '\n';
+        Logger::info("Saved: " + filename.string());
         return true;
     }
     
-    std::cerr << "Failed to save: " << filename << '\n';
+    Logger::error("Failed to save: " + filename.string());
     return false;
 }
 
@@ -46,6 +46,6 @@ void FrameSaver::ensureDirectoryExists() {
     try {
         std::filesystem::create_directories(m_baseFolder);
     } catch (const std::filesystem::filesystem_error& e) {
-        std::cerr << "Failed to create directory: " << e.what() << '\n';
+        Logger::error("Failed to create directory: " + std::string(e.what()));
     }
 }

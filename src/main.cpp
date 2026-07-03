@@ -1,20 +1,21 @@
-#include <iostream>
 #include "GStreamerPipeline.h"
+#include "Logger.h"
+
 
 int main() {
-    std::cout << "=== GStreamer Video Processing Pipeline ===" << '\n';
+    Logger::info("=== GStreamer Video Processing Pipeline ===");
 
     GStreamerPipeline pipeline;
 
     const bool initialized = pipeline.init();
     if (!initialized) {
-        std::cerr << "Failed to initialize GStreamer pipeline!" << '\n';
+        Logger::error("Failed to initialize GStreamer pipeline!");
         return -1;
     }
 
     pipeline.run();
     pipeline.cleanup();
 
-    std::cout << "Pipeline finished successfully." << '\n';
+    Logger::info("Pipeline finished successfully.");
     return 0;
 }

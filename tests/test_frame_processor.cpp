@@ -2,6 +2,7 @@
 #include "FrameProcessor.h"
 #include <opencv2/opencv.hpp>
 
+
 TEST(FrameProcessorTest, ProcessesImageInGrayscaleMode) {
     // Arrange
     const cv::Mat bgrImage(100, 100, CV_8UC3, cv::Scalar(255, 128, 64)); 

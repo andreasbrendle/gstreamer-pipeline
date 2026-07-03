@@ -41,6 +41,7 @@ add_library(pipeline_lib
     src/FrameProcessor.cpp
     src/FrameSaver.cpp
     src/GStreamerPipeline.cpp
+    src/Logger.cpp
 )
 
 target_include_directories(pipeline_lib PUBLIC ${PROJECT_SOURCE_DIR}/include)
@@ -66,6 +67,9 @@ add_executable(pipeline_tests
     tests/test_frame_saver.cpp
     tests/test_gstreamer_pipeline_functional.cpp
     tests/test_pipeline_functional.cpp
+    tests/test_environment.cpp
+    src/Logger.cpp
+
 )
 
 target_link_libraries(pipeline_tests

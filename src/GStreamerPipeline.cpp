@@ -1,9 +1,9 @@
 #include "GStreamerPipeline.h"
 #include "FrameProcessor.h"
 #include "FrameSaver.h"
+#include "Logger.h"
 #include "glibconfig.h"
 
-#include <iostream>
 #include <filesystem>
 #include <string>
 #include <cstring>
@@ -66,7 +66,7 @@ static void on_pad_added([[maybe_unused]]GstElement *src, GstPad *pad, gpointer 
 
     GstPadLinkReturn ret = gst_pad_link(pad, sinkpad.get());
     if (ret != GST_PAD_LINK_OK) {
-        std::cerr << "Failed to link decodebin pad!" << '\n';
+        Logger::error("Failed to link decodebin pad!");
     }
 }
 
@@ -74,7 +74,7 @@ static void on_pad_added([[maybe_unused]]GstElement *src, GstPad *pad, gpointer 
  * @brief Initialize GStreamer and create the pipeline.
  */
 bool GStreamerPipeline::init() {
-    std::cout << "Initializing GStreamer pipeline..." << '\n';
+    Logger::info("Initializing GStreamer pipeline...");
 
     gst_init(nullptr, nullptr);
 
@@ -92,7 +92,7 @@ bool GStreamerPipeline::init() {
 
     setupFrameSaver();
 
-    std::cout << "GStreamer pipeline created successfully." << '\n';
+    Logger::info("GStreamer pipeline created successfully.");
     return true;
 }
 
@@ -116,7 +116,7 @@ bool GStreamerPipeline::createElements() {
         ||  data.decodebin == nullptr
         ||  data.convert == nullptr
         ||  data.sink == nullptr) {
-        std::cerr << "Failed to create GStreamer elements!" << '\n';
+        Logger::error("Failed to create GStreamer elements!");
         return false;
     }
     return true;
@@ -132,7 +132,7 @@ bool GStreamerPipeline::configureElements() const {
     auto videoPath      = resolveVideoPath(projectRoot);
 
     if (!std::filesystem::exists(videoPath)) {
-        std::cerr << "Video file not found at: " << videoPath << '\n';
+        Logger::error("Video file not found at: " + videoPath.string());
         return false;
     }
 
@@ -173,12 +173,12 @@ bool GStreamerPipeline::linkElements() const {
 
     // Link source to decodebin
     if (gst_element_link(data.source, data.decodebin) == FALSE) {
-        std::cerr << "Failed to link source to decodebin!" << '\n';
+        Logger::error("Failed to link source to decodebin!");
         return false;
     }
 
     if (gst_element_link(data.convert, data.sink) == FALSE) {
-        std::cerr << "Failed to link convert to sink!" << '\n';
+        Logger::error("Failed to link convert to sink!");
         return false;
     }
 
@@ -198,29 +198,29 @@ void GStreamerPipeline::setupFrameSaver() {
     std::filesystem::create_directories(outputDir);
     frameSaver.setBaseFolder(outputDir);
 
-    std::cout << "Using project root: " << projectRoot << '\n';
+    Logger::info("Using project root: " + projectRoot.string());
 }
 
 /**
  * @brief Start the pipeline and run the main processing loop.
  */
 void GStreamerPipeline::run() {
-    std::cout << "Starting pipeline..." << '\n';
+    Logger::info("Starting pipeline...");
 
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast, bugprone-casting-through-void, cppcoreguidelines-pro-type-vararg)
     std::unique_ptr<GstBus, GstObjectDeleter> bus(GST_BUS(gst_element_get_bus(data.pipeline)));
 
     GstStateChangeReturn ret = gst_element_set_state(data.pipeline, GST_STATE_PLAYING);
     if (ret == GST_STATE_CHANGE_FAILURE) {
-        std::cerr << "Failed to start pipeline!" << '\n';
+        Logger::error("Failed to start pipeline!");
         return;
     }
 
-    std::cout << "Pipeline is running. Processing frames..." << '\n';
+    Logger::info("Pipeline is running. Processing frames...");
 
     processSamples();
 
-    std::cout << "Finished processing " << frameCount << " frames." << '\n';
+    Logger::info("Finished processing " + std::to_string(frameCount) + " frames.");
 }
 
 /**
@@ -264,15 +264,20 @@ void GStreamerPipeline::handleSample(GstSample *sample, bool &isFirstFrame, int 
     gst_structure_get_int(structure, "height", &height);
 
     if (isFirstFrame) {
-        std::cout << "Video info - Format: " << (format != nullptr ? format : "unknown") 
-                  << ", Size: " << width << "x" << height << '\n';
+        std::string msg = "Video info - Format: ";
+        msg += (format != nullptr ? format : "unknown");
+        msg += ", Size: " + std::to_string(width) + "x" + std::to_string(height);
+        Logger::info(msg);
+
         isFirstFrame = false;
     }
 
     if (format != nullptr && strcmp(format, "BGR") == 0) {
         processBGRFrame(buffer, width, height, frameCount);
     } else {
-        std::cout << "Skipping unsupported format: " << (format != nullptr ? format : "unknown") << '\n';
+        std::string msg = "Skipping unsupported format: ";
+        msg += (format != nullptr ? format : "unknown");
+        Logger::info(msg);
     }
 }
 
@@ -303,7 +308,7 @@ void GStreamerPipeline::processBGRFrame(GstBuffer *buffer, gint width, gint heig
  * @brief Clean up GStreamer resources.
  */
 void GStreamerPipeline::cleanup() const {
-    std::cout << "Cleaning up..." << '\n';
+    Logger::info("Cleaning up...");
 
     if (data.pipeline !=nullptr) {
         gst_element_set_state(data.pipeline, GST_STATE_NULL);
