@@ -46,12 +46,11 @@ std::filesystem::path resolveProjectRoot() {
 std::filesystem::path resolveVideoPath(const std::filesystem::path &projectRoot) {
     return projectRoot / "test_video.mp4";
 }
-} // namespace
 
 /**
  * @brief Callback for dynamic pads created by decodebin.
  */
-static void on_pad_added([[maybe_unused]]GstElement *src, GstPad *pad, gpointer data) {
+void on_pad_added([[maybe_unused]]GstElement *src, GstPad *pad, gpointer data) {
     GstElement *convert = GST_ELEMENT(data);
 
     std::unique_ptr<GstPad, GstObjectDeleter> sinkpad(GST_PAD(gst_element_get_static_pad(convert, "sink")));
@@ -69,6 +68,9 @@ static void on_pad_added([[maybe_unused]]GstElement *src, GstPad *pad, gpointer 
         Logger::error("Failed to link decodebin pad!");
     }
 }
+
+} // namespace
+
 
 /**
  * @brief Initialize GStreamer and create the pipeline.
@@ -287,7 +289,7 @@ void GStreamerPipeline::handleSample(GstSample *sample, bool &isFirstFrame, int 
 void GStreamerPipeline::processBGRFrame(GstBuffer *buffer, gint width, gint height, int &frameCount) {
 
     GstMapInfo map;
-    if (gst_buffer_map(buffer, &map, GST_MAP_READ)== FALSE) {
+    if (gst_buffer_map(buffer, &map, GST_MAP_READ) == FALSE) {
         return;
     }
 
