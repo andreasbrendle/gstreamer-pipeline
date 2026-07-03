@@ -30,4 +30,3 @@ echo "Installing OpenCV..."
 sudo apt install -y libopencv-dev python3-opencv
 
 echo "=== Setup completed! ==="
-echo "Du kannst jetzt mit dem Build fortfahren."
