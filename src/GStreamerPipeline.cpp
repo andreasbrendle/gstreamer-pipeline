@@ -54,7 +54,6 @@ std::filesystem::path resolveVideoPath(const std::filesystem::path &projectRoot)
 static void on_pad_added([[maybe_unused]]GstElement *src, GstPad *pad, gpointer data) {
     GstElement *convert = GST_ELEMENT(data);
 
-    // NOLINTNEXTLINE(bugprone-casting-through-void)
     std::unique_ptr<GstPad, GstObjectDeleter> sinkpad(GST_PAD(gst_element_get_static_pad(convert, "sink")));
     
     if (!sinkpad) {
@@ -164,7 +163,7 @@ bool GStreamerPipeline::configureElements() const {
  */
 bool GStreamerPipeline::linkElements() const {
     // Add elements to the pipeline
-    // NOLINTNEXTLINE(bugprone-casting-through-void, cppcoreguidelines-pro-type-vararg)
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
     gst_bin_add_many(GST_BIN(data.pipeline), 
                      data.source, 
                      data.decodebin, 
@@ -184,7 +183,6 @@ bool GStreamerPipeline::linkElements() const {
     }
 
     // Connect to pad-added signal of decodebin
-    // NOLINTNEXTLINE(bugprone-casting-through-void)
     g_signal_connect(data.decodebin, "pad-added", G_CALLBACK(on_pad_added), data.convert);
     return true;
 }
@@ -208,7 +206,7 @@ void GStreamerPipeline::setupFrameSaver() {
 void GStreamerPipeline::run() {
     Logger::info("Starting pipeline...");
 
-    // NOLINTNEXTLINE(bugprone-casting-through-void, cppcoreguidelines-pro-type-vararg)
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
     std::unique_ptr<GstBus, GstObjectDeleter> bus(GST_BUS(gst_element_get_bus(data.pipeline)));
 
     GstStateChangeReturn ret = gst_element_set_state(data.pipeline, GST_STATE_PLAYING);
@@ -232,8 +230,7 @@ void GStreamerPipeline::processSamples() {
     bool isFirstFrame    = true;
 
     while (true) {
-        /* Pull frames from appsink*/
-        // NOLINTNEXTLINE(bugprone-casting-through-void)
+        // Pull frames from appsink
         GstSample *sample = gst_app_sink_pull_sample(GST_APP_SINK(data.sink));
         if (sample == nullptr) {
             break; // End of stream reached
