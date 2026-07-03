@@ -53,7 +53,7 @@ std::filesystem::path resolveVideoPath(const std::filesystem::path &projectRoot)
 void on_pad_added([[maybe_unused]]GstElement *src, GstPad *pad, gpointer data) {
     GstElement *convert = GST_ELEMENT(data);
 
-    std::unique_ptr<GstPad, GstObjectDeleter> sinkpad(GST_PAD(gst_element_get_static_pad(convert, "sink")));
+    const std::unique_ptr<GstPad, GstObjectDeleter> sinkpad(GST_PAD(gst_element_get_static_pad(convert, "sink")));
     
     if (!sinkpad) {
         return;
@@ -63,7 +63,7 @@ void on_pad_added([[maybe_unused]]GstElement *src, GstPad *pad, gpointer data) {
         return;
     }
 
-    GstPadLinkReturn ret = gst_pad_link(pad, sinkpad.get());
+    const GstPadLinkReturn ret = gst_pad_link(pad, sinkpad.get());
     if (ret != GST_PAD_LINK_OK) {
         Logger::error("Failed to link decodebin pad!");
     }
@@ -149,7 +149,7 @@ bool GStreamerPipeline::configureElements() const {
     
     // Force output format to BGR to have compatibility with OpenCV
     auto caps_deleter = [](GstCaps* c) { if (c != nullptr) gst_caps_unref(c); };
-    std::unique_ptr<GstCaps, decltype(caps_deleter)> caps(
+    const std::unique_ptr<GstCaps, decltype(caps_deleter)> caps(
         gst_caps_from_string("video/x-raw, format=BGR"), caps_deleter);
     
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, bugprone-va-arg)
@@ -209,9 +209,9 @@ void GStreamerPipeline::run() {
     Logger::info("Starting pipeline...");
 
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
-    std::unique_ptr<GstBus, GstObjectDeleter> bus(GST_BUS(gst_element_get_bus(data.pipeline)));
+    const std::unique_ptr<GstBus, GstObjectDeleter> bus(GST_BUS(gst_element_get_bus(data.pipeline)));
 
-    GstStateChangeReturn ret = gst_element_set_state(data.pipeline, GST_STATE_PLAYING);
+    const GstStateChangeReturn ret = gst_element_set_state(data.pipeline, GST_STATE_PLAYING);
     if (ret == GST_STATE_CHANGE_FAILURE) {
         Logger::error("Failed to start pipeline!");
         return;
