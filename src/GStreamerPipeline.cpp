@@ -58,7 +58,9 @@ static void on_pad_added([[maybe_unused]]GstElement *src, GstPad *pad, gpointer 
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast, bugprone-casting-through-void)
     std::unique_ptr<GstPad, GstObjectDeleter> sinkpad(GST_PAD(gst_element_get_static_pad(convert, "sink")));
     
-    if (!sinkpad) {return;}
+    if (!sinkpad) {
+        return;
+    }
 
     if (gst_pad_is_linked(sinkpad.get()) != FALSE) {
         return;
@@ -252,7 +254,9 @@ void GStreamerPipeline::handleSample(GstSample *sample, bool &isFirstFrame, int 
     GstBuffer *buffer   = gst_sample_get_buffer(sample);
     GstCaps *caps       = gst_sample_get_caps(sample);
 
-    if (buffer == nullptr || caps == nullptr) {return;}
+    if (buffer == nullptr || caps == nullptr) {
+        return;
+    }
 
     GstStructure *structure = gst_caps_get_structure(caps, 0);
     const gchar  *format    = gst_structure_get_string(structure, "format");
@@ -287,7 +291,9 @@ void GStreamerPipeline::handleSample(GstSample *sample, bool &isFirstFrame, int 
 void GStreamerPipeline::processBGRFrame(GstBuffer *buffer, gint width, gint height, int &frameCount) {
 
     GstMapInfo map;
-    if (gst_buffer_map(buffer, &map, GST_MAP_READ)== FALSE) {return;}
+    if (gst_buffer_map(buffer, &map, GST_MAP_READ)== FALSE) {
+        return;
+    }
 
     const cv::Mat frame(height, width, CV_8UC3, static_cast<void*>(map.data));
 
